@@ -25,8 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('period')->group(function () {
 
         // Main calculation endpoint
-        Route::post('/calculate', [PeriodCalculationController::class, 'calcu
-    late']);
+        Route::post('/calculate', [PeriodCalculationController::class, 'calculate']);
 
         // Calendar view endpoint
         Route::post('/calendar', [PeriodCalculationController::class, 'calendar'])
