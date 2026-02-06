@@ -51,16 +51,26 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Login successful',
                 'user' => $user,
                 'token' => $token,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Authentication failed',
                 'error' => $e->getMessage(),
             ], 401);
         }
+    }
+
+
+    public function logout(Request $request)
+    {
+        $user = User::findOrFail(Auth::id());
+        $user->tokens()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Logged out successfully',
+        ], 200);
     }
 }
