@@ -22,6 +22,8 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+    Route::put('/profile', [AuthController::class, 'updateProfile']);
+
     Route::prefix('period')->group(function () {
 
         // Main calculation endpoint
