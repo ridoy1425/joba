@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
+use Google\Client as GoogleClient;
 
 class AuthController extends Controller
 {
@@ -102,5 +103,42 @@ class AuthController extends Controller
             'success' => true,
             'user' => $user,
         ], 200);
+    }
+
+    public function googleLogin(Request $request)
+    {
+        
+        $idToken = $request->input('id_token');  // Google ID Token from Flutter
+        // Initialize the Google Client
+        $googleClient = new GoogleClient();
+        $googleClient->setClientId(config('services.google.client_id'));  // Your Google Client ID
+        $googleClient->setClientSecret(config('services.google.client_secret'));  // Your Google Client Secret
+        $googleClient->addScope('email');
+        $googleClient->addScope('profile');
+
+        // Verify the ID token
+        $payload = $googleClient->verifyIdToken($idToken);
+
+        if ($payload) {
+            // The token is valid
+            // Now you can get the user's information
+            $googleId = $payload['sub'];  // Google user ID
+            $email = $payload['email'];
+            $name = $payload['name'];
+
+            // Check if the user exists or create a new one
+            $user = User::firstOrCreate(
+                ['google_id' => $googleId],
+                ['email' => $email, 'name' => $name]
+            );
+
+            // Log the user in or generate a JWT token for the session
+            // For example, using Laravel Passport for authentication
+            $token = $user->createToken('YourAppName')->accessToken;
+
+            return response()->json(['token' => $token]);
+        } else {
+            return response()->json(['error' => $payload], 401);
+        }
     }
 }

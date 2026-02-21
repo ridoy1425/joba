@@ -10,6 +10,7 @@ use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 Route::prefix('auth')->group(function () {
     Route::get('google', [AuthController::class, 'redirectToGoogle']);
     Route::get('google/callback', [AuthController::class, 'handleGoogleCallback']);
+    Route::post('google', [AuthController::class, 'googleLogin']);
 });
 
 
