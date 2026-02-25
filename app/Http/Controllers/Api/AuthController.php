@@ -107,38 +107,28 @@ class AuthController extends Controller
 
     public function googleLogin(Request $request)
     {
-        
-        $idToken = $request->input('id_token');  // Google ID Token from Flutter
-        // Initialize the Google Client
-        $googleClient = new GoogleClient();
-        $googleClient->setClientId(config('services.google.client_id'));  // Your Google Client ID
-        $googleClient->setClientSecret(config('services.google.client_secret'));  // Your Google Client Secret
-        $googleClient->addScope('email');
-        $googleClient->addScope('profile');
+        $idToken = $request->input('id_token');
 
-        // Verify the ID token
-        $payload = $googleClient->verifyIdToken($idToken);
+        if (!$idToken) {
+            return response()->json(['error' => 'No token provided'], 400);
+        }
 
-        if ($payload) {
-            // The token is valid
-            // Now you can get the user's information
-            $googleId = $payload['sub'];  // Google user ID
-            $email = $payload['email'];
-            $name = $payload['name'];
+        try {
+            $googleClient = new \Google_Client();
+            $googleClient->setClientId(config('services.google.client_id'));  // Set the correct client ID
 
-            // Check if the user exists or create a new one
-            $user = User::firstOrCreate(
-                ['google_id' => $googleId],
-                ['email' => $email, 'name' => $name]
-            );
-
-            // Log the user in or generate a JWT token for the session
-            // For example, using Laravel Passport for authentication
-            $token = $user->createToken('YourAppName')->accessToken;
-
-            return response()->json(['token' => $token]);
-        } else {
-            return response()->json(['error' => $payload], 401);
+            // Verify the ID Token using Google's Client
+            $googleUser = $googleClient->verifyIdToken($idToken);
+            info('googleUser ' . json_encode($googleUser));
+            if ($googleUser) {
+                // Token is valid, you can access the user information here
+                return response()->json(['googleUser' => $googleUser], 200);
+            } else {
+                return response()->json(['error' => 'Invalid Google ID token'], 401);
+            }
+        } catch (\Exception $e) {
+            // Catch any errors, such as network errors or invalid token format
+            return response()->json(['error' => 'Error verifying token', 'message' => $e->getMessage()], 500);
         }
     }
 }
