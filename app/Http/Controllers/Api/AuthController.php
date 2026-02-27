@@ -124,7 +124,7 @@ class AuthController extends Controller
                 // Token is valid, you can access the user information here
                 return response()->json(['googleUser' => $googleUser], 200);
             } else {
-                return response()->json(['error' => 'Invalid Google ID token'], 401);
+                return response()->json(['error' => 'Invalid Google ID token here'], 401);
             }
         } catch (\Exception $e) {
             // Catch any errors, such as network errors or invalid token format
