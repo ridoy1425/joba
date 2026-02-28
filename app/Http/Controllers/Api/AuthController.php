@@ -115,14 +115,36 @@ class AuthController extends Controller
 
         try {
             $googleClient = new \Google_Client();
-            $googleClient->setClientId(config('services.google.client_id'));  // Set the correct client ID
+            $googleClient->setClientId(config('services.google.client_id'));
 
             // Verify the ID Token using Google's Client
             $googleUser = $googleClient->verifyIdToken($idToken);
-            info('googleUser ' . json_encode($googleUser));
             if ($googleUser) {
+                $user = User::where('email', $googleUser['email'])->first();
+                if (!$user) {
+                    $user = User::create([
+                        'name' => $googleUser['name'],
+                        'email' => $googleUser['email'],
+                        'google_id' => $googleUser['sub'],
+                        'avatar' => $googleUser['picture'] ?? null,
+                        'password' => Hash::make(uniqid()), // Random password
+                        'email_verified_at' => now(),
+                    ]);
+                } else {
+                    // Update google_id if not set
+                    if (!$user->google_id) {
+                        $user->update(['google_id' => $googleUser['sub']]);
+                    }
+                }
+
+                // Create token (using Sanctum)
+                $token = $user->createToken('google-auth-token')->plainTextToken;
+
                 // Token is valid, you can access the user information here
-                return response()->json(['googleUser' => $googleUser], 200);
+                return response()->json([
+                    'user' => $user,
+                    'token' => $token,
+                ], 200);
             } else {
                 return response()->json(['error' => 'Invalid Google ID token here'], 401);
             }
